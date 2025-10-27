@@ -2,8 +2,9 @@ name: Daily Repository Update
 
 on:
   schedule:
+    # Runs every day at 08:30 UTC (2:00 PM IST)
     - cron: '30 8 * * *'
-  workflow_dispatch:
+  workflow_dispatch: # allows manual trigger for testing
 
 permissions:
   contents: write
@@ -11,14 +12,16 @@ permissions:
 jobs:
   daily-commit:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          persist-credentials: false
+          persist-credentials: true  # keeps token for push access
 
       - name: Update status file (24f1002437@ds.study.iitm.ac.in)
-        run: echo "Last updated on $(date -u)" > last_update.txt
+        run: |
+          echo "Last updated on $(date -u)" > last_update.txt
 
       - name: Configure Git
         run: |
@@ -26,9 +29,7 @@ jobs:
           git config user.email "24f1002437@ds.study.iitm.ac.in"
 
       - name: Commit and push changes
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git add last_update.txt
           git commit -m "Automated daily update: $(date -u)" || echo "No changes to commit"
-          git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
+          git push
